@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CashFlow VE - Gestión de Flujo de Caja en Venezuela</title>
+    
+    <!-- 
+    ========================================
+    ESTILOS CSS
+    ========================================
+    -->
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #1c1e21;
+            --text-muted: #65676b;
+            --accent-blue: #1877f2;
+            --accent-green: #42b72a;
+            --accent-red: #fa3e3e;
+            --accent-orange: #f7b928;
+            --border-radius: 8px;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        /* Header & Help */
+        header {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { margin: 0; font-size: 1.4em; color: var(--accent-blue); }
+        .subtitle { font-size: 0.85em; color: var(--text-muted); }
+
+        .help-btn {
+            background: var(--accent-blue);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        /* Main Grid */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.1em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        /* Inputs */
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95em;
+        }
+
+        input:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+        }
+
+        input.error {
+            border-color: var(--accent-red);
+            background-color: #ffe6e6;
+        }
+
+        .budget-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: flex-end;
+            background: #f7f8fa;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .budget-row .col-name { flex: 2; }
+        .budget-row .col-name input { margin-bottom: 0; }
+        
+        .budget-row .col-amount { flex: 1.5; }
+        .budget-row .col-amount input { margin-bottom: 0; }
+        
+        .budget-row .col-cashea { flex: 1.2; }
+        .budget-row .col-cashea input { margin-bottom: 0; }
+        
+        .budget-row .col-delete { flex: 0.5; display: flex; align-items: center; justify-content: center; }
+        .budget-row .col-delete button {
+            background: #ffebee;
+            color: var(--accent-red);
+            border: 1px solid #ffcdd2;
+            width: 100%;
+            margin-bottom: 0;
+            padding: 10px;
+        }
+
+        button.primary {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        button.primary:hover { background-color: #166fe5; }
+
+        button.add-row {
+            background-color: #e4e6eb;
+            color: var(--text-main);
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        button.download {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button.download:hover { background-color: #369926; }
+
+        /* Alert Messages */
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            display: none;
+        }
+        .alert-error {
+            background-color: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #ffcdd2;
+        }
+        .alert-success {
+            background-color: #e6ffe6;
+            color: #006600;
+            border: 1px solid #ccffcc;
+        }
+
+        /* Data Display */
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .data-item {
+            background: #f7f8fa;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .data-value {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: var(--accent-blue);
+        }
+        .data-label {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Results & Risk */
+        .result-box {
+            background: #e7f3ff;
+            border-left: 4px solid var(--accent-blue);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .result-box h3 { margin: 0 0 10px 0; font-size: 1em; }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .result-row.total {
+            border-top: 1px solid #cce5ff;
+            padding-top: 5px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .result-subrow {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 5px;
+            font-size: 0.85em;
+            color: #666;
+            font-style: italic;
+        }
+
+        .risk-meter {
+            height: 20px;
+            background: #e4e6eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+            position: relative;
+        }
+        .risk-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s, background-color 0.5s;
+        }
+        .risk-text {
+            text-align: center;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        /* Workflow */
+        .workflow-section {
+            grid-column: 1 / -1;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: flex-start;
+        }
+        .checklist input[type="checkbox"] {
+            width: auto;
+            margin-right: 15px;
+            margin-top: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .budget-row { flex-direction: column; align-items: stretch; }
+            .budget-row .col-delete button { width: 100%; margin-top: 5px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Header -->
+<header>
+    <div>
+        <h1>CashFlow VE | Gestión de Flujo de Caja</h1>
+        <div class="subtitle">Controla tu dinero. Usa Cashea sin riesgos. Protege tu capital con USD/USDT</div>
+    </div>
+    <button class="help-btn" onclick="openModal()">?</button>
+</header>
+
+<!-- Help Modal -->
+<div id="helpModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h2>¿Cómo usar CashFlow VE?</h2>
+        
+        <h3>📋 Paso a Paso</h3>
+        <ol style="font-size: 0.9em; padding-left: 20px; line-height: 1.8;">
+            <li>Ingresa tu <strong>ingreso total</strong> (semanal o mensual) en USD.</li>
+            <li>Agrega tus <strong>categorías de gasto</strong> (Alimentos, Servicios, Salud, etc.).</li>
+            <li>Para cada categoría, completa:
+                <ul style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                    <li><strong>Monto Total ($):</strong> Cuánto gastarás en esa categoría.</li>
+                    <li><strong>Monto Cashea ($):</strong> Cuánto pagarás con Cashea.</li>
+                </ul>
+            </li>
+            <li>Revisa los <strong>datos económicos</strong> (inflación, BCV, P2P). Puedes editarlos si tienes información más actualizada.</li>
+            <li>Haz click en <strong>"Calcular Estrategia"</strong> para ver los resultados.</li>
+            <li>El resultado te dirá:
+                <ul style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                    <li>Cuánto dinero mantener en <strong>efectivo</strong>.</li>
+                    <li>Cuánto mantener en <strong>Bolívares (Buffer Cashea)</strong>.</li>
+                    <li>Cuánto convertir a <strong>USD/USDT</strong> para protegerte de la inflación.</li>
+                </ul>
+            </li>
+            <li>Usa el botón <strong>"📥 Descargar Resultados"</strong> para guardar un resumen en Excel.</li>
+        </ol>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <h3>📍 Las 2 Entradas Numéricas en Gastos</h3>
+        <p style="font-size: 0.9em;">Cada fila de gasto tiene <strong>dos números</strong> que debes completar:</p>
+        
+        <div style="background: #f0f2f5; padding: 15px; border-radius: 6px; margin: 10px 0;">
+            <p style="margin: 5px 0;"><strong>1️⃣ Monto Total ($):</strong></p>
+            <p style="font-size: 0.85em; color: #666; margin: 0;">Cuánto dinero gastarás en esa categoría durante el periodo. Ej: Si gastarás $200 en comida, pon <code>200</code>.</p>
+            
+            <hr style="border: 0; border-top: 1px solid #ddd; margin: 10px 0;">
+            
+            <p style="margin: 5px 0;"><strong>2️⃣ Monto Cashea ($):</strong></p>
+            <p style="font-size: 0.85em; color: #666; margin: 0;">Cuánto de ese total pagarás con Cashea. Ej: Si de $200, pagarás $100 con Cashea, pon <code>100</code>.</p>
+        </div>
+
+        <h3>Ejemplo Completo</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85em;">
+            <tr style="background: #e4e6eb;">
+                <th style="padding: 8px; text-align: left;">Categoría</th>
+                <th style="padding: 8px;">Monto Total</th>
+                <th style="padding: 8px;">Monto Cashea</th>
+                <th style="padding: 8px;">Resultado</th>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">Alimentos</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">$200</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">$100</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd; font-size: 0.8em;">$100 Cashea, $100 Efectivo</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd;">Servicios</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">$50</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">$0</td>
+                <td style="padding: 8px; border-bottom: 1px solid #ddd; font-size: 0.8em;">$0 Cashea, $50 Efectivo</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="container">
+    
+    <!-- COLUMN 1: INCOME & BUDGET -->
+    <div class="card">
+        <h2>💰 Ingresos y Presupuesto</h2>
+        
+        <!-- Alert Messages -->
+        <div id="alert-box" class="alert"></div>
+        
+        <label>Frecuencia de Ingreso:</label>
+        <select id="income-frequency" onchange="calculateAll()">
+            <option value="monthly">Mensual</option>
+            <option value="weekly">Semanal</option>
+        </select>
+
+        <label>Ingreso Total (USD):</label>
+        <input type="number" id="total-income" placeholder="Ej. 400" oninput="clearErrors()">
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <label style="margin-bottom: 10px; display: block;">
+            Categorías de Gasto
+            <span style="font-size: 0.75em; color: #666; font-weight: normal; display: block;">
+                💡 Cada fila tiene 2 números: Monto Total y Monto Cashea
+            </span>
+        </label>
+        
+        <div id="budget-list">
+            <!-- Dynamic Rows will appear here -->
+        </div>
+        
+        <button class="add-row" onclick="addBudgetRow()">+ Agregar Categoría</button>
+        <button class="primary" onclick="validateAndCalculate()">Calcular Estrategia</button>
+    </div>
+
+    <!-- COLUMN 2: ECONOMIC DATA & SIGNALING -->
+    <div class="card">
+        <h2>📈 Contexto Económico</h2>
+        <div class="data-grid">
+            <div class="data-item">
+                <div class="data-value" id="disp-inflation">8.4%</div>
+                <div class="data-label">Inflación Mensual</div>
+                <input type="number" id="input-inflation" value="8.4" step="0.1" style="font-size: 0.8em; padding: 5px; margin-top:5px;" onchange="calculateAll()">
+            </div>
+            <div class="data-item">
+                <div class="data-value" id="disp-bcv">866.56</div>
+                <div class="data-label">Tasa BCV (Bs)</div>
+                <input type="number" id="input-bcv" value="866.56" step="0.01" style="font-size: 0.8em; padding: 5px; margin-top:5px;" onchange="calculateAll()">
+            </div>
+            <div class="data-item">
+                <div class="data-value" id="disp-p2p">965.00</div>
+                <div class="data-label">P2P USD/USDT (Bs)</div>
+                <input type="number" id="input-p2p" value="965.00" step="0.01" style="font-size: 0.8em; padding: 5px; margin-top:5px;" onchange="calculateAll()">
+            </div>
+            <div class="data-item">
+                <div class="data-value" id="disp-interest">3.5%</div>
+                <div class="data-label">Tasa Ahorro (Mes)</div>
+                <small style="font-size: 0.7em; color:#666;">Ref: 42% Anual BCV</small>
+            </div>
+        </div>
+
+        <h2>🏦 Señalización Crediticia</h2>
+        <div style="text-align: center; padding: 20px; background: #f7f8fa; border-radius: 8px;">
+            <div style="font-size: 2em; font-weight: bold; color: var(--accent-green);" id="signaling-status">Óptimo</div>
+            <p style="font-size: 0.85em; color: #666; margin: 5px 0;">Basado en tu saldo promedio proyectado</p>
+        </div>
+        <ul style="font-size: 0.85em; color: #555; padding-left: 20px; margin-top: 15px;">
+            <li>El banco valora saldos promedio > $50.</li>
+            <li>Pagar Cashea a tiempo mejora tu score.</li>
+            <li>No mantengas la cuenta en cero.</li>
+        </ul>
+    </div>
+
+    <!-- COLUMN 3: RESULTS & RISK -->
+    <div class="card">
+        <h2>📋 Resultado Sugerido</h2>
+        
+        <div class="result-box">
+            <h3>Asignación de Fondos</h3>
+            <div class="result-row">
+                <span>Para Gastos (Cash/Transf):</span>
+                <span id="res-cash">0.00 USD</span>
+            </div>
+            <div class="result-row">
+                <span>Buffer Cashea (VES):</span>
+                <span id="res-cashea-ves">0.00 USD</span>
+            </div>
+            <div class="result-row total">
+                <span>🛡️ A Convertir en USD/USDT:</span>
+                <span id="res-hedge">0.00 USD</span>
+            </div>
+            <div class="result-subrow">
+                <span id="res-hedge-usdt">~0.00 USDT</span>
+            </div>
+        </div>
+
+        <button class="download" onclick="downloadCSV()">📥 Descargar Resultados</button>
+
+        <div style="font-size: 0.85em; color: #555; margin-top: 15px; margin-bottom: 15px;">
+            <strong>Nota:</strong> El "Buffer Cashea" es la cantidad en Bolívares que debes tener en el banco HOY para cubrir las cuotas de los próximos 30 días + un 10% de seguridad.
+        </div>
+
+        <h2>⚠️ Monitor de Riesgo por Inflación</h2>
+        <div class="risk-meter">
+            <div class="risk-fill" id="risk-bar"></div>
+        </div>
+        <div class="risk-text" id="risk-text">Esperando cálculo...</div>
+        <div id="risk-alert" style="margin-top: 10px; padding: 10px; background: #ffe6e6; color: #cc0000; border-radius: 4px; font-size: 0.85em; display: none;">
+            <strong>Alerta:</strong> Tu "Buffer Cashea" representa una porción alta de tu ingreso. Aunque esto asegura tus pagos, la inflación (~8.4% mensual) está erosionando ese capital mientras está en Bolívares.
+            <br><br>
+            <strong>Recomendación:</strong> Considera reducir el monto de compras por Cashea en categorías no esenciales.
+        </div>
+    </div>
+
+    <!-- WORKFLOW SECTION -->
+    <div class="card workflow-section">
+        <h2>🔄 Flujo de Trabajo</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <div>
+                <h3>Inicio de Periodo</h3>
+                <ul class="checklist">
+                    <li><input type="checkbox"> Recibir ingreso y depositar 100% en cuenta principal.</li>
+                    <li><input type="checkbox"> Calcular total de cuotas Cashea del mes.</li>
+                    <li><input type="checkbox"> Convertir el EXCEDENTE a USD/USDT inmediatamente.</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Durante el Periodo</h3>
+                <ul class="checklist">
+                    <li><input type="checkbox"> Usar Cashea en comercios aliados (paga solo 50% inicial).</li>
+                    <li><input type="checkbox"> Programar pago de cuotas 2 días antes del cierre.</li>
+                    <li><input type="checkbox"> No usar el Buffer Cashea para otros gastos.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIC SECTION -->
+    <div class="card workflow-section">
+        <h2>📚 Lógica de la Estrategia</h2>
+        <p style="font-size: 0.9em; color: #555;">
+            En la Venezuela de 2026, la inflación (~8.4% mensual) es superior a la tasa de interés bancaria (~3.5% mensual). 
+            Esto significa que cada dólar que mantienes en Bolívares pierde aproximadamente <strong>4.9% de valor real cada mes</strong> si no lo usas.
+            <br><br>
+            Esta herramienta minimiza esa pérdida manteniendo en VES solo lo estrictamente necesario para tus cuotas Cashea inmediatas, 
+            mientras protege el resto de tu patrimonio en divisas duras (USD/USDT).
+        </p>
+    </div>
+
+</div>
+
+<!-- 
+========================================
+LÓGICA JAVASCRIPT
+========================================
+-->
+<script>
+    // ========================================
+    // CONSTANTES Y DATOS POR DEFECTO
+    // ========================================
+    const DEFAULT_INFLATION = 8.4;
+    const DEFAULT_BCV = 866.56;
+    const DEFAULT_P2P = 965.00;
+    const ANNUAL_INTEREST = 42;
+
+    let budgetCategories = [
+        { name: "Alimentos / Mercado", amount: 0, casheaAmount: 0 },
+        { name: "Servicios (Luz/Agua/Internet)", amount: 0, casheaAmount: 0 },
+        { name: "Salud / Farmacia", amount: 0, casheaAmount: 0 },
+        { name: "Transporte", amount: 0, casheaAmount: 0 }
+    ];
+
+    let lastResults = {
+        cash: 0,
+        buffer: 0,
+        hedge: 0,
+        hedgeUSDT: 0,
+        signaling: '',
+        risk: '',
+        exposure: 0
+    };
+
+    // ========================================
+    // FUNCIONES DE INICIALIZACIÓN
+    // ========================================
+    function init() {
+        renderBudgetRows();
+    }
+
+    function renderBudgetRows() {
+        const container = document.getElementById('budget-list');
+        container.innerHTML = '';
+
+        budgetCategories.forEach((cat, index) => {
+            const row = document.createElement('div');
+            row.className = 'budget-row';
+            row.innerHTML = `
+                <div class="col-name">
+                    <input type="text" value="${cat.name}" onchange="updateCategory(${index}, 'name', this.value)" placeholder="Categoría">
+                </div>
+                <div class="col-amount">
+                    <input type="number" value="${cat.amount}" onchange="updateCategory(${index}, 'amount', this.value)" placeholder="Total $" step="0.01">
+                </div>
+                <div class="col-cashea">
+                    <input type="number" value="${cat.casheaAmount}" onchange="updateCategory(${index}, 'casheaAmount', this.value)" placeholder="Cashea $" step="0.01">
+                </div>
+                <div class="col-delete">
+                    <button onclick="removeRow(${index})" title="Eliminar">🗑️</button>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    // ========================================
+    // GESTIÓN DE PRESUPUESTO
+    // ========================================
+    function addBudgetRow() {
+        budgetCategories.push({ name: "", amount: 0, casheaAmount: 0 });
+        renderBudgetRows();
+        clearErrors();
+    }
+
+    function removeRow(index) {
+        budgetCategories.splice(index, 1);
+        renderBudgetRows();
+        clearErrors();
+    }
+
+    function updateCategory(index, field, value) {
+        if (field === 'amount' || field === 'casheaAmount') {
+            value = parseFloat(value) || 0;
+        }
+        budgetCategories[index][field] = value;
+        clearErrors();
+    }
+
+    // ========================================
+    // VALIDACIÓN
+    // ========================================
+    function clearErrors() {
+        document.querySelectorAll('input').forEach(input => {
+            input.classList.remove('error');
+        });
+        document.getElementById('alert-box').style.display = 'none';
+    }
+
+    function showAlert(message, type = 'error') {
+        const alertBox = document.getElementById('alert-box');
+        alertBox.className = 'alert ' + (type === 'error' ? 'alert-error' : 'alert-success');
+        alertBox.innerHTML = message;
+        alertBox.style.display = 'block';
+    }
+
+    function validateAndCalculate() {
+        clearErrors();
+        let hasError = false;
+        let errors = [];
+
+        let incomeInput = document.getElementById('total-income');
+        let incomeUSD = parseFloat(incomeInput.value) || 0;
+
+        if (incomeUSD <= 0) {
+            incomeInput.classList.add('error');
+            errors.push("❌ Debes ingresar un ingreso total mayor a $0");
+            hasError = true;
+        }
+
+        let validCategories = budgetCategories.filter(cat => cat.amount > 0);
+        
+        if (validCategories.length === 0) {
+            errors.push("❌ Debes agregar al menos 1 categoría de gasto con monto total mayor a $0");
+            hasError = true;
+        }
+
+        budgetCategories.forEach((cat, index) => {
+            if (cat.amount > 0) {
+                if (cat.casheaAmount > cat.amount) {
+                    errors.push(`❌ En "${cat.name || 'Categoría ' + (index + 1)}": El monto Cashea ($${cat.casheaAmount.toFixed(2)}) no puede ser mayor al monto total ($${cat.amount.toFixed(2)})`);
+                    hasError = true;
+                }
+                if (cat.casheaAmount < 0) {
+                    errors.push(`❌ En "${cat.name || 'Categoría ' + (index + 1)}": El monto Cashea no puede ser negativo`);
+                    hasError = true;
+                }
+            }
+        });
+
+        if (hasError) {
+            showAlert(errors.join('<br>'), 'error');
+            document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            showAlert('✅ Datos válidos. Calculando estrategia...', 'success');
+            setTimeout(() => {
+                calculateAll();
+                document.getElementById('alert-box').style.display = 'none';
+            }, 800);
+        }
+    }
+
+    // ========================================
+    // MOTOR DE CÁLCULO
+    // ========================================
+    function calculateAll() {
+        let inflation = parseFloat(document.getElementById('input-inflation').value) || DEFAULT_INFLATION;
+        let bcv = parseFloat(document.getElementById('input-bcv').value) || DEFAULT_BCV;
+        let p2p = parseFloat(document.getElementById('input-p2p').value) || DEFAULT_P2P;
+        let monthlyInterest = ANNUAL_INTEREST / 12;
+
+        document.getElementById('disp-inflation').innerText = inflation + '%';
+        document.getElementById('disp-bcv').innerText = bcv.toFixed(2);
+        document.getElementById('disp-p2p').innerText = p2p.toFixed(2);
+        document.getElementById('disp-interest').innerText = monthlyInterest.toFixed(1) + '%';
+
+        let incomeUSD = parseFloat(document.getElementById('total-income').value) || 0;
+        let frequency = document.getElementById('income-frequency').value;
+        let monthlyIncome = (frequency === 'weekly') ? incomeUSD * 4.33 : incomeUSD;
+
+        let totalBudgetUSD = 0;
+        let totalCasheaUSD = 0;
+        let totalCashUSD = 0;
+
+        budgetCategories.forEach(cat => {
+            totalBudgetUSD += cat.amount;
+            totalCasheaUSD += cat.casheaAmount;
+            totalCashUSD += (cat.amount - cat.casheaAmount);
+        });
+
+        let bufferSafetyMargin = 1.10; 
+        let targetBufferUSD = totalCasheaUSD * bufferSafetyMargin;
+
+        let remainingForHedge = monthlyIncome - (totalCashUSD + targetBufferUSD);
+        if (remainingForHedge < 0) remainingForHedge = 0;
+
+        let hedgeInBolivars = remainingForHedge * bcv;
+        let hedgeInUSDT = hedgeInBolivars / p2p;
+
+        document.getElementById('res-cash').innerText = totalCashUSD.toFixed(2) + ' USD';
+        document.getElementById('res-cashea-ves').innerText = targetBufferUSD.toFixed(2) + ' USD';
+        document.getElementById('res-hedge').innerText = remainingForHedge.toFixed(2) + ' USD';
+        document.getElementById('res-hedge-usdt').innerText = '~' + hedgeInUSDT.toFixed(2) + ' USDT';
+
+        updateRiskAndSignaling(monthlyIncome, targetBufferUSD, totalCashUSD, inflation, monthlyInterest);
+
+        let vesExposurePct = monthlyIncome > 0 ? (targetBufferUSD / monthlyIncome) * 100 : 0;
+        lastResults = {
+            cash: totalCashUSD,
+            buffer: targetBufferUSD,
+            hedge: remainingForHedge,
+            hedgeUSDT: hedgeInUSDT,
+            signaling: document.getElementById('signaling-status').innerText,
+            risk: document.getElementById('risk-text').innerText,
+            exposure: vesExposurePct,
+            frequency: frequency,
+            income: monthlyIncome,
+            inflation: inflation,
+            bcv: bcv,
+            p2p: p2p
+        };
+    }
+
+    // ========================================
+    // RIESGO Y SEÑALIZACIÓN
+    // ========================================
+    function updateRiskAndSignaling(income, buffer, cash, inflation, interest) {
+        let signalingStatus = document.getElementById('signaling-status');
+        
+        if (buffer > 50) {
+            signalingStatus.innerText = "Óptimo";
+            signalingStatus.style.color = '#42b72a';
+        } else if (buffer > 20) {
+            signalingStatus.innerText = "Aceptable";
+            signalingStatus.style.color = '#f7b928';
+        } else {
+            signalingStatus.innerText = "Bajo (Saldo Insuficiente)";
+            signalingStatus.style.color = '#65676b';
+        }
+
+        let vesExposurePct = 0;
+        if (income > 0) {
+            vesExposurePct = (buffer / income) * 100;
+        }
+
+        let riskBar = document.getElementById('risk-bar');
+        let riskText = document.getElementById('risk-text');
+        let riskAlert = document.getElementById('risk-alert');
+
+        riskAlert.style.display = 'none';
+        
+        if (vesExposurePct > 40) {
+            riskBar.style.width = '100%';
+            riskBar.style.backgroundColor = '#fa3e3e';
+            riskText.innerText = "Riesgo Alto: Exceso de Bolívares";
+            riskText.style.color = '#fa3e3e';
+            riskAlert.style.display = 'block';
+            riskAlert.innerHTML = `
+                <strong>Alerta:</strong> Tu "Buffer Cashea" representa una porción alta de tu ingreso. Aunque esto asegura tus pagos, la inflación (~${inflation}% mensual) está erosionando ese capital mientras está en Bolívares.
+                <br><br>
+                <strong>Recomendación:</strong> Considera reducir el monto de compras por Cashea en categorías no esenciales.
+            `;
+        } else if (vesExposurePct > 15) {
+            riskBar.style.width = '60%';
+            riskBar.style.backgroundColor = '#f7b928';
+            riskText.innerText = "Riesgo Moderado";
+            riskText.style.color = '#f7b928';
+            riskAlert.style.display = 'block';
+            riskAlert.innerHTML = `
+                <strong>Atención:</strong> Tu exposición a Bolívares es moderada. La inflación (~${inflation}% mensual) reduce el poder adquisitivo de tu buffer.
+                <br><br>
+                <strong>Recomendación:</strong> Mantén este nivel solo si es necesario para tus cuotas Cashea.
+            `;
+        } else {
+            let width = Math.max(10, vesExposurePct * 2);
+            riskBar.style.width = width + '%';
+            riskBar.style.backgroundColor = '#42b72a';
+            riskText.innerText = "Riesgo Bajo (Óptimo)";
+            riskText.style.color = '#42b72a';
+        }
+    }
+
+    // ========================================
+    // EXPORTAR CSV
+    // ========================================
+    function downloadCSV() {
+        if (lastResults.income === 0) {
+            showAlert('⚠️ Primero debes calcular la estrategia antes de descargar.', 'error');
+            return;
+        }
+
+        let now = new Date();
+        let dateStr = now.toISOString().slice(0,10);
+        let timeStr = now.toTimeString().slice(0,5);
+
+        let csvContent = "CASHFLOW VE - GESTIÓN DE FLUJO DE CAJA\n";
+        csvContent += "==============================\n\n";
+        csvContent += `Fecha,${dateStr} ${timeStr}\n`;
+        csvContent += `Frecuencia de Ingreso,${lastResults.frequency === 'monthly' ? 'Mensual' : 'Semanal'}\n\n`;
+        
+        csvContent += "DATOS ECONÓMICOS\n";
+        csvContent += `Inflación Mensual,${lastResults.inflation}%\n`;
+        csvContent += `Tasa BCV,${lastResults.bcv} Bs/USD\n`;
+        csvContent += `Tasa P2P,${lastResults.p2p} Bs/USDT\n\n`;
+        
+        csvContent += "INGRESO\n";
+        csvContent += `Ingreso Total,${lastResults.income.toFixed(2)} USD\n\n`;
+        
+        csvContent += "PRESUPUESTO DETALLADO\n";
+        csvContent += "Categoría,Monto Total (USD),Monto Cashea (USD)\n";
+        budgetCategories.forEach(cat => {
+            if (cat.amount > 0) {
+                csvContent += `${cat.name},${cat.amount.toFixed(2)},${cat.casheaAmount.toFixed(2)}\n`;
+            }
+        });
+        csvContent += "\n";
+        
+        csvContent += "RESULTADO SUGERIDO\n";
+        csvContent += `Para Gastos (Cash/Transf),${lastResults.cash.toFixed(2)} USD\n`;
+        csvContent += `Buffer Cashea (VES),${lastResults.buffer.toFixed(2)} USD\n`;
+        csvContent += `A Convertir en USD/USDT,${lastResults.hedge.toFixed(2)} USD\n`;
+        csvContent += `Equivalente en USDT,${lastResults.hedgeUSDT.toFixed(2)} USDT\n\n`;
+        
+        csvContent += "INDICADORES\n";
+        csvContent += `Señalización Crediticia,${lastResults.signaling}\n`;
+        csvContent += `Nivel de Riesgo,${lastResults.risk}\n`;
+        csvContent += `Exposición a Bolívares,${lastResults.exposure.toFixed(1)}%\n`;
+
+        let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement("a");
+        let url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `cashflow_ve_${dateStr}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showAlert('✅ Resultados descargados exitosamente.', 'success');
+        setTimeout(() => {
+            document.getElementById('alert-box').style.display = 'none';
+        }, 3000);
+    }
+
+    // ========================================
+    // MODAL DE AYUDA
+    // ========================================
+    function openModal() {
+        document.getElementById('helpModal').style.display = "block";
+    }
+    function closeModal() {
+        document.getElementById('helpModal').style.display = "none";
+    }
+    window.onclick = function(event) {
+        let modal = document.getElementById('helpModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // ========================================
+    // INICIALIZAR
+    // ========================================
+    init();
+</script>
+
+</body>
+</html>
